@@ -93,6 +93,11 @@ variable "acr_public_network_access_enabled" {
   type        = bool
 }
 
+variable "acr_admin_enabled" {
+  description = "Enable ACR admin user."
+  type        = bool
+}
+
 variable "log_analytics_workspace_id" {
   description = "Log Analytics workspace ID."
   type        = string

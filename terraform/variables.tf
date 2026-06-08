@@ -144,6 +144,12 @@ variable "acr_public_network_access_enabled" {
   default     = true
 }
 
+variable "acr_admin_enabled" {
+  description = "Whether ACR admin user is enabled."
+  type        = bool
+  default     = false
+}
+
 variable "image_repository" {
   description = "Container image repository (for example nginx)."
   type        = string

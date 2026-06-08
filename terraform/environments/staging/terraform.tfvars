@@ -45,6 +45,7 @@ key_vault_allowed_ip_rules              = []
 
 acr_sku                           = "Basic"
 acr_public_network_access_enabled = true
+acr_admin_enabled                 = true
 
 tags = {
   Environment = "staging"

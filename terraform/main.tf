@@ -62,6 +62,7 @@ module "container_platform" {
   acr_name                          = local.acr_name
   acr_sku                           = var.acr_sku
   acr_public_network_access_enabled = var.acr_public_network_access_enabled
+  acr_admin_enabled                 = var.acr_admin_enabled
   log_analytics_workspace_id        = module.security_monitoring.log_analytics_workspace_id
   infrastructure_subnet_id          = module.networking.aca_subnet_id
   action_group_id                   = module.security_monitoring.action_group_id

@@ -2,6 +2,14 @@ name: terraform-azure
 
 on:
   pull_request:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-azure.yml"
+  push:
+    branches:
+      - main
     paths:
       - "terraform/**"
       - ".github/workflows/terraform-azure.yml"
@@ -11,6 +19,7 @@ on:
         description: "Target environment"
         required: true
         type: choice
+        default: staging
         options:
           - dev
           - staging
@@ -20,14 +29,50 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: terraform-azure-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'staging' }}-${{ github.ref_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TF_IN_AUTOMATION: true
+  TF_INPUT: false
+  TF_VERSION: 1.9.8
+  TF_WORKING_DIR: terraform
+  ARM_USE_OIDC: true
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
 jobs:
-  validate-plan:
+  context:
     runs-on: ubuntu-latest
-    env:
-      TF_IN_AUTOMATION: true
+    outputs:
+      environment: ${{ steps.set.outputs.environment }}
+      backend_file: ${{ steps.set.outputs.backend_file }}
+      tfvars_file: ${{ steps.set.outputs.tfvars_file }}
+      artifact_name: ${{ steps.set.outputs.artifact_name }}
+    steps:
+      - name: Select target environment
+        id: set
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            environment="${{ github.event.inputs.environment }}"
+          else
+            environment="staging"
+          fi
+
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
+          echo "backend_file=environments/$environment/backend.hcl" >> "$GITHUB_OUTPUT"
+          echo "tfvars_file=environments/$environment/terraform.tfvars" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=tfplan-$environment" >> "$GITHUB_OUTPUT"
+
+  quality:
+    runs-on: ubuntu-latest
+    needs: context
     defaults:
       run:
-        working-directory: terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,37 +80,31 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.9.8
-
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Terraform Init
-        run: terraform init -backend-config=environments/staging/backend.hcl
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Fmt
         run: terraform fmt -check -recursive
 
+      - name: Terraform Init (backend disabled)
+        run: terraform init -backend=false
+
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan (staging)
-        run: terraform plan -out=tfplan -var-file=environments/staging/terraform.tfvars
+      - name: Terraform Security Scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: ${{ env.TF_WORKING_DIR }}
+          additional_args: --minimum-severity HIGH
 
-  apply:
-    if: github.event_name == 'workflow_dispatch'
+  plan:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    needs: validate-plan
-    env:
-      TF_IN_AUTOMATION: true
+    needs:
+      - context
+      - quality
     defaults:
       run:
-        working-directory: terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,20 +112,102 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.9.8
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
-        run: terraform init -backend-config=environments/${{ github.event.inputs.environment }}/backend.hcl
+        run: terraform init -backend-config=${{ needs.context.outputs.backend_file }}
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan -var-file=environments/${{ github.event.inputs.environment }}/terraform.tfvars
+        run: terraform plan -out=tfplan -var-file=${{ needs.context.outputs.tfvars_file }} -lock-timeout=5m
+
+      - name: Render Terraform Plan
+        shell: bash
+        run: terraform show -no-color tfplan > plan.txt
+
+      - name: Stage Plan Artifact
+        shell: bash
+        run: |
+          mkdir -p ../plan-artifact
+          cp tfplan ../plan-artifact/tfplan
+          cp plan.txt ../plan-artifact/plan.txt
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.context.outputs.artifact_name }}
+          path: plan-artifact/
+          if-no-files-found: error
+
+      - name: Publish Plan Summary
+        shell: bash
+        run: |
+          {
+            echo "## Terraform plan (${{ needs.context.outputs.environment }})"
+            echo
+            echo "Backend: \\`${{ needs.context.outputs.backend_file }}\\`"
+            echo
+            echo "Variables: \\`${{ needs.context.outputs.tfvars_file }}\\`"
+            echo
+            echo '```terraform'
+            sed -n '1,200p' plan.txt
+            if [ "$(wc -l < plan.txt)" -gt 200 ]; then
+              echo
+              echo "... plan output truncated ..."
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.context.outputs.environment }}
+    needs:
+      - context
+      - plan
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.context.outputs.artifact_name }}
+          path: plan-artifact
+
+      - name: Terraform Init
+        run: terraform init -backend-config=${{ needs.context.outputs.backend_file }}
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply ../plan-artifact/tfplan
+
+      - name: Publish Apply Summary
+        run: |
+          {
+            echo "## Terraform apply completed"
+            echo
+            echo "Environment: \\`${{ needs.context.outputs.environment }}\\`"
+            echo
+            echo "Applied plan artifact: \\`${{ needs.context.outputs.artifact_name }}\\`"
+          } >> "$GITHUB_STEP_SUMMARY"

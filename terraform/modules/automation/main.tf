@@ -56,7 +56,6 @@ resource "azurerm_automation_schedule" "scale_down" {
   name                    = "schedule-scale-down"
   resource_group_name     = var.resource_group_name
   automation_account_name = azurerm_automation_account.main.name
-  start_time              = var.scale_down_start_time
   frequency               = "Week"
   interval                = 1
   timezone                = var.timezone
@@ -72,7 +71,6 @@ resource "azurerm_automation_schedule" "scale_up" {
   name                    = "schedule-scale-up"
   resource_group_name     = var.resource_group_name
   automation_account_name = azurerm_automation_account.main.name
-  start_time              = var.scale_up_start_time
   frequency               = "Week"
   interval                = 1
   timezone                = var.timezone

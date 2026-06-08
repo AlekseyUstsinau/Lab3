@@ -38,7 +38,7 @@ vnet_cidr                    = "10.30.0.0/16"
 aca_subnet_cidr              = "10.30.2.0/23"
 private_endpoint_subnet_cidr = "10.30.4.0/24"
 
-key_vault_soft_delete_retention_days    = 14
+key_vault_soft_delete_retention_days    = 7
 key_vault_purge_protection_enabled      = true
 key_vault_public_network_access_enabled = false
 key_vault_allowed_ip_rules              = []

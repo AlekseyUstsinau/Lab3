@@ -82,8 +82,6 @@ module "automation" {
   timezone                    = local.normalized_off_hours_timezone
   scale_down_cron             = var.scale_down_cron
   scale_up_cron               = var.scale_up_cron
-  scale_down_start_time       = local.scale_down_start_time
-  scale_up_start_time         = local.scale_up_start_time
   target_resource_group_name  = azurerm_resource_group.main.name
   target_container_app_name   = module.container_platform.container_app_name
   business_hours_min_replicas = var.business_hours_min_replicas

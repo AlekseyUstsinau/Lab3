@@ -38,17 +38,5 @@ locals {
   automation_enabled      = var.enable_night_schedule && var.scale_down_cron != "" && var.scale_up_cron != ""
   scale_down_cron_parts   = local.automation_enabled ? split(" ", var.scale_down_cron) : []
   scale_up_cron_parts     = local.automation_enabled ? split(" ", var.scale_up_cron) : []
-  scale_down_start_time = local.automation_enabled ? format(
-    "%sT%02d:%02d:00Z",
-    formatdate("YYYY-MM-DD", timestamp()),
-    tonumber(local.scale_down_cron_parts[2]),
-    tonumber(local.scale_down_cron_parts[1])
-  ) : null
-  scale_up_start_time = local.automation_enabled ? format(
-    "%sT%02d:%02d:00Z",
-    formatdate("YYYY-MM-DD", timestamp()),
-    tonumber(local.scale_up_cron_parts[2]),
-    tonumber(local.scale_up_cron_parts[1])
-  ) : null
   effective_inbound_cidrs = var.allowed_inbound_cidrs
 }

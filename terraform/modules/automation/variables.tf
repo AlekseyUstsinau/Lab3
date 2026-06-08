@@ -33,16 +33,6 @@ variable "scale_up_cron" {
   type        = string
 }
 
-variable "scale_down_start_time" {
-  description = "Computed RFC3339 start time for the scale-down schedule."
-  type        = string
-}
-
-variable "scale_up_start_time" {
-  description = "Computed RFC3339 start time for the scale-up schedule."
-  type        = string
-}
-
 variable "target_resource_group_name" {
   description = "Target resource group containing Container App."
   type        = string

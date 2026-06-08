@@ -79,7 +79,7 @@ module "automation" {
   location                    = var.location
   automation_account_name     = local.automation_account_name
   automation_runbook_name     = local.automation_runbook_name
-  timezone                    = var.off_hours_timezone
+  timezone                    = local.normalized_off_hours_timezone
   scale_down_cron             = var.scale_down_cron
   scale_up_cron               = var.scale_up_cron
   scale_down_start_time       = local.scale_down_start_time

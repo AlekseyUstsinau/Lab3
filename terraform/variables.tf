@@ -322,13 +322,13 @@ variable "key_vault_soft_delete_retention_days" {
 variable "key_vault_purge_protection_enabled" {
   description = "Enable Key Vault purge protection."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "key_vault_public_network_access_enabled" {
   description = "Enable public network access for Key Vault."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "key_vault_allowed_ip_rules" {
@@ -363,7 +363,12 @@ variable "scale_up_cron" {
 variable "off_hours_timezone" {
   description = "Timezone used by automation schedules."
   type        = string
-  default     = "UTC"
+  default     = "Etc/UTC"
+
+  validation {
+    condition     = length(trimspace(var.off_hours_timezone)) > 0
+    error_message = "off_hours_timezone cannot be empty."
+  }
 }
 
 variable "off_hours_min_replicas" {

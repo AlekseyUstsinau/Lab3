@@ -1,5 +1,6 @@
 locals {
-  normalized_environment = lower(var.environment)
+  normalized_environment        = lower(var.environment)
+  normalized_off_hours_timezone = lower(var.off_hours_timezone) == "utc" ? "Etc/UTC" : var.off_hours_timezone
 
   name_prefix = format(
     "%s-%s-%s-%s",
@@ -49,5 +50,5 @@ locals {
     tonumber(local.scale_up_cron_parts[2]),
     tonumber(local.scale_up_cron_parts[1])
   ) : null
-  effective_inbound_cidrs = length(var.allowed_inbound_cidrs) > 0 ? var.allowed_inbound_cidrs : ["0.0.0.0/0"]
+  effective_inbound_cidrs = var.allowed_inbound_cidrs
 }

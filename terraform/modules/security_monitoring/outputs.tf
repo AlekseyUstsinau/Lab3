@@ -3,12 +3,6 @@ output "log_analytics_workspace_id" {
   value       = azurerm_log_analytics_workspace.main.id
 }
 
-output "log_analytics_workspace_primary_shared_key" {
-  description = "Primary shared key for workspace ingestion."
-  value       = azurerm_log_analytics_workspace.main.primary_shared_key
-  sensitive   = true
-}
-
 output "key_vault_id" {
   description = "Key Vault ID."
   value       = azurerm_key_vault.main.id

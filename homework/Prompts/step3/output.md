@@ -664,3 +664,40 @@ Current state:
 - `plan`: in progress (just started; currently in early steps)
 
 No new failure yet. The run has already passed all pre-plan gates, and `plan` is executing with the updated RBAC permissions now.
+
+Store the result in structurization folder that be used by Copilot in another sessions
+
+prompt2.md
+:13
+I’m tightening that instruction in the active Lab3 prompt so it reads clearly and preserves the same intent for future Copilot sessions.
+
+Edited
+prompt2.md+1-1
+The wording fix is in. I’m running a quick file validation now to make sure the prompt stays clean after the edit.
+
+Checked prompt2.md, no problems found
+
+Updated prompt2.md to:
+
+Store the result in the structurization folder so it can be used by Copilot in future sessions.
+
+Validation is clean.
+
+Restore Checkpoint
+Store the result in the structurization folder in case other folders will be not accessible
+
+Evaluating user intent
+I’m checking the current structurization session note first so I can add this storage requirement in the right place instead of scattering it across unrelated files.
+
+Reviewed session_result.md and searched for storage notes
+I found the right anchor in the handoff document. I’m adding one explicit note that the structurization folder is the canonical storage location for reuse when other folders are inaccessible.
+
+Edited
+session_result.md+4-0
+The handoff note is in. I’m validating the updated structurization document now so the storage instruction is saved cleanly in the canonical folder.
+
+Checked session_result.md, no problems found
+
+Added the storage guidance directly to session_result.md.
+
+It now states that structurization should be treated as the canonical handoff location for future Copilot sessions, especially if other folders are unavailable or inaccessible. Validation is clean.

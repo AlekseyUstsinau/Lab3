@@ -10,4 +10,4 @@ run terraform plan
 
 apply
 
-Store the result in structurization folder that be used by Copilot in another sessions
+Store the result in the structurization folder so it can be used by Copilot in future sessions.

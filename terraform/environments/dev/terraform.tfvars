@@ -28,7 +28,7 @@ memory_alert_threshold_percent = 80
 enable_night_schedule       = true
 scale_down_cron             = "0 0 22 * * 1-5"
 scale_up_cron               = "0 0 7 * * 1-5"
-off_hours_timezone          = "UTC"
+off_hours_timezone          = "Etc/UTC"
 off_hours_min_replicas      = 0
 business_hours_min_replicas = 1
 
@@ -39,8 +39,8 @@ aca_subnet_cidr              = "10.30.2.0/23"
 private_endpoint_subnet_cidr = "10.30.4.0/24"
 
 key_vault_soft_delete_retention_days    = 7
-key_vault_purge_protection_enabled      = false
-key_vault_public_network_access_enabled = true
+key_vault_purge_protection_enabled      = true
+key_vault_public_network_access_enabled = false
 key_vault_allowed_ip_rules              = []
 
 acr_sku                           = "Basic"

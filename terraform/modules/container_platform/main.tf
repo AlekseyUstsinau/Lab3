@@ -1,5 +1,21 @@
 locals {
   image_full = format("%s:%s", var.image_repository, var.image_tag)
+  ingress_ip_restrictions = length(var.allowed_inbound_cidrs) == 0 ? [] : concat(
+    [
+      for index, cidr in var.allowed_inbound_cidrs : {
+        name             = format("allow-%02d", index + 1)
+        action           = "Allow"
+        ip_address_range = cidr
+      }
+    ],
+    [
+      {
+        name             = "deny-all"
+        action           = "Deny"
+        ip_address_range = "0.0.0.0/0"
+      }
+    ]
+  )
 }
 
 resource "azurerm_container_registry" "main" {
@@ -41,6 +57,16 @@ resource "azurerm_container_app" "main" {
     external_enabled           = var.ingress_external_enabled
     target_port                = var.container_port
     allow_insecure_connections = false
+
+    dynamic "ip_security_restriction" {
+      for_each = local.ingress_ip_restrictions
+
+      content {
+        name             = ip_security_restriction.value.name
+        action           = ip_security_restriction.value.action
+        ip_address_range = ip_security_restriction.value.ip_address_range
+      }
+    }
 
     traffic_weight {
       latest_revision = true

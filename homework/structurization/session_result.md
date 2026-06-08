@@ -7,6 +7,10 @@
 - Enabled ACR admin user for existing registry.
 - Diagnosed and recovered Container App operational state from Stopped/Failed to Running.
 
+## Handoff storage note
+- Store and maintain session handoff artifacts in the `homework/structurization/` folder.
+- Treat this folder as the canonical context location for future Copilot sessions in case other folders are unavailable or inaccessible.
+
 ## Terraform deployment status
 - Workspace: `c:\Users\a.ustsinau\Lab3\terraform`
 - Environment: `staging`

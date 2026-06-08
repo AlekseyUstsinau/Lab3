@@ -22,7 +22,7 @@ It must be highly available and support horizontal scaling. Keep costs low (use
 free tier where possible) and implement an automatic stop during nights to save 
 money. This is for short-lived testing and should be easy to tear down.
 
-Please provision infrastructure in AWS and add a CI/CD pipeline that can deploy 
+Please provision infrastructure in Azure and add a CI/CD pipeline that can deploy 
 updates. Prioritize reliability and low cost.
 
 Thanks,

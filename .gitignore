@@ -256,6 +256,9 @@ venv.bak/
 
 *.retry*.log
 
+# Allow non-secret environment inputs used by the shared Lab3 CI workflow.
+!terraform/environments/*/terraform.tfvars
+
 
 
 # Docker fileslogs/*.suo# IDE and Editor files

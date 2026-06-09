@@ -16,8 +16,8 @@ container_port     = 80
 image_repository   = "nginx"
 image_tag          = "1.27.0-alpine"
 
-ingress_external_enabled = false
-enable_private_ingress   = true
+ingress_external_enabled = true
+enable_private_ingress   = false
 enable_zone_redundancy   = true
 
 log_retention_days             = 30
